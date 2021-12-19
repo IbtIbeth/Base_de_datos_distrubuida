@@ -1,27 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy import text
 from sqlalchemy.sql.functions import user
-import mysql.connector
-from mysql.connector import errorcode
+import os
+from dotenv import dotenv_values
 
-#Conexion
-def test(database):
-    config = {"user": "admin", "password": "123", "host":"localhost", "database":database,"raise_on_warnings":True}
-
-    try:
-        cnxcentral = mysql.connector.connect(**config)
-        print('\n'+'\033[0;32m'+'Conexion a la base de datos central exitosa'+  '\033[0;m')
-        cursorcentral=cnxcentral.cursor()
-
-    except mysql.connector.Error as err:
-        print('Base de datos central')
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            print("Something is wrong with your user name or password")
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            print("Database does not exist")
-        else:
-            print(err)
-
+config = dotenv_values(".env")# take environment variables from .env.
 
 def print_menu():
     """
@@ -111,7 +94,7 @@ def create_user():
     nombre, apellido_paterno, apellido_materno, rfc = input("Introduce el nombre, apellido paterno, apellido materno y rfc separados por espacios: ").split()
     query = 'INSERT INTO CLIENTE (nombre, apellido_paterno, apellido_materno, rfc) VALUES("%s", "%s", "%s", "%s")' %(nombre, apellido_paterno, apellido_materno, rfc)
     query += ";"
-    breakpoint()
+    # breakpoint()
     return query
 
 def update_user():
@@ -175,20 +158,18 @@ OPTIONS = {
 }
 
 def create_connection(location=""):
-    # Verify this later, change this depending on the value
-    databases = {
-         "1": "patzcuaro",
-         "2": "morelia",
+    #Validate the location is valid...+
+    database = location or config.get("DATABASE")
+    user = config.get("USER_DB")
+    password = config.get("PASSWORD")
+    host = config.get("HOST")
+    port = config.get("PORT")
 
-    }
-    Validate the location is valid...
-    database = "patzcuaro"
-    database = location
     #database = "patzcuaro"
-    engine = create_engine(f'mysql+pymysql://admin:123@localhost:3306/{database}')
-    with engine.connect() as connection:
-        result = connection.execute(text("select username from users"))
+    engine = create_engine(f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}')
 
+
+    #TODO Handle error in connection
     return engine.connect()
 
 def list_databases(conn):
@@ -212,10 +193,16 @@ if __name__ == "__main__":
     # Select a database (location)
     #databases = list_databases(create_connection())
     #print(databases) # TODO Format
-    sucursal = input("Elige la sucursal a la que te conectas: ")
+    #sucursal = input("Elige la sucursal a la que te conectas: ")
 
-    # Create connection to the database
-    test(sucursal)
+    # Test the connection to the database
+    print("Generando conexion a base de datos...")
+    conn = create_connection()
+    if conn:
+        print("La conexion a la base de datos fue existosa")
+    # test(sucursal)
+
+
     print_menu()
     user_choice = input()
     query_generator = OPTIONS.get(user_choice) #["1"] # OPTIONS.get("1")
