@@ -56,7 +56,7 @@ COMMENT 'wrapper "mysql", table "DIRECCION"'
 CREATE TABLE sucursal.CLIENTE_DIRECCION(
 	id_cliente INT NOT NULL,
 	id_direccion INT NOT NULL,
-    ciudad VARCHAR(100) NOT NULL,
+    sucursal VARCHAR(100) NOT NULL,
     PRIMARY KEY (sucursal),
     KEY (id_cliente, id_direccion)
 )
