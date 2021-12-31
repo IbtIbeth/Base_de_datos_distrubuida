@@ -8,7 +8,7 @@ def list_users(conn):
     # Show the users
     for user_data in res:
         print(*user_data)
-    conn.close()
+
 
 
 def search_user(conn):
@@ -16,31 +16,35 @@ def search_user(conn):
     Function to search a user in the database using its info like
     RFC, name, and address
     """
-    #print("* Para buscar al cliente, por RFC, utilice el siguiente formato: rfc = 'inserte el rfc entre comillas'")
-    # print("* Para buscar al cliente, por nombre, utilice el siguiente formato: nombre = 'inserte el nombre entre comillas'")
-    # TODO Validate search for address
-    #print("* Para buscar al cliente, por domicilio, utilice el siguiente formato: ")
     print("* Seleccione el parametro de búsqueda:")
-    print("[1] Nombre o apellidos")
-    print("[2] RFC")
-    print("[3] Dirección")
+    print("[1] Nombre/s")
+    print("[2] Apellido paterno")
+    print("[3] Apellido materno")
+    print("[4] RFC")
+    print("[5] Dirección")
     option = input()
-    while option not in "123":
+    while option not in "12345":
         print("Opcion no válida. Introduce un valor válido. ")
         option = input()
 
     search_parameter = input("Introduce el texto de búsqueda: ")
 
     if option == "1":
-        condition = f'nombre="{search_parameter}" OR apellido_paterno="{search_parameter}" OR apellido_materno="{search_parameter}"'
+        condition = f'nombre="{search_parameter}"'
     elif option == "2":
+        condition = f'apellido_paterno="{search_parameter}"'
+    elif option == "3":
+        condition = f'apellido_materno="{search_parameter}"'
+    elif option == "4":
         condition = f'rfc="{search_parameter}"'
-    # elif option == "3": # TODO Add later
+    # elif option == "5": # TODO Add later
     #     condition = f"direccion={search_parameter}"
 
     # TODO Find a better way to select the table
     query = "SELECT * FROM CLIENTE WHERE " + condition + ";"
+    breakpoint()
     res = list(conn.execute(text(query)))
+    breakpoint()
     if res:
         for user_data in res:
             print(*user_data)
@@ -99,7 +103,7 @@ def list_address(conn):
     # Show addresses
     for address_data in res:
         print(*address_data)
-    conn.close()
+
 
 def create_direccion(calle, numero, colonia, estado, cp ):
     """
