@@ -1,8 +1,10 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exc
 from sqlalchemy import text
+import sqlalchemy
 from sqlalchemy.sql.functions import user
 import os
 from dotenv import dotenv_values
+import sys
 
 config = dotenv_values(".env")# take environment variables from .env.
 
@@ -13,7 +15,7 @@ def print_menu():
     print("-"*60)
     print("   | BIENVENIDE |   ".center(60, "-"))
     print("-"*60)
-    print("Elige que quieres realizar:")
+    print("Opciones disponibles:")
     print("[0] - Listar clientes")
     print("[1] - Buscar usuario por RFC, Nombre o Domicilio")
     print("[2] - Crear usuario")
@@ -56,6 +58,10 @@ def search_user(conn):
     print("[2] RFC")
     print("[3] Dirección")
     option = input()
+    while option not in "123":
+        print("Opcion no valida. Introduce un valor valido. ")
+        option = input()
+
     search_parameter = input("Introduce el texto de busqueda: ")
 
     if option == "1":
@@ -64,15 +70,13 @@ def search_user(conn):
         condition = f'rfc="{search_parameter}"'
     # elif option == "3": # TODO Add later
     #     condition = f"direccion={search_parameter}"
-    else:
-        print("Opcion no valida")
 
     # TODO Find a better way to select the table
     query = "SELECT * FROM CLIENTE WHERE " + condition + ";"
+    breakpoint()
     res = conn.execute(text(query))
     for user_data in res:
         print(*user_data)
-
 
     # i = 0
     # breakpoint()
@@ -157,14 +161,13 @@ OPTIONS = {
     "2": create_user,
 }
 
-def create_connection(location=""):
+def create_connection():
     #Validate the location is valid...+
-    database = location or config.get("DATABASE")
+    database = config.get("DATABASE")
     user = config.get("USER_DB")
     password = config.get("PASSWORD")
     host = config.get("HOST")
     port = config.get("PORT")
-
     #database = "patzcuaro"
     engine = create_engine(f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}')
 
@@ -186,33 +189,48 @@ def select_database():
     pass
 
 
+def validate_connection():
+    print("Probando conexion a base de datos...")
+    # Validate that config has variables
+    if not config:
+        print("ERROR: Tienes que crear un archivo llamado '.env' y escribir las variables para la conexion.")
+        sys.exit()
+    else:
+        empty_variables = []
+        for variable, value in config.items():
+            if not value:
+                print(f"ERROR: La variable {variable} no tiene un valor asignado")
+                empty_variables.append(variable)
+        if empty_variables:
+            sys.exit()
+    try:
+        conn = create_connection()
+        conn.close()
+    except sqlalchemy.exc.OperationalError as e:
+        print("ERROR: Ocurrio un error con el siguiente detalle:", e.orig)
+        sys.exit()
+
+    print("La conexion a la base de datos ha sido exitosa")
+
 
 
 if __name__ == "__main__":
-    # location_id = input("A que sucursual te diriges: [1] Patzcuaro. [2] Morelia: ")
-    # Select a database (location)
-    #databases = list_databases(create_connection())
-    #print(databases) # TODO Format
-    #sucursal = input("Elige la sucursal a la que te conectas: ")
-
     # Test the connection to the database
-    print("Generando conexion a base de datos...")
+    validate_connection()
+
     conn = create_connection()
-    if conn:
-        print("La conexion a la base de datos fue existosa")
-    # test(sucursal)
 
 
     print_menu()
-    user_choice = input()
-    query_generator = OPTIONS.get(user_choice) #["1"] # OPTIONS.get("1")
+    finished = False
+    
+    while not finished:
+        user_choice = input("\nElige que quieres realizar: ")
+        query_generator = OPTIONS.get(user_choice) #["1"] # OPTIONS.get("1")
+        if not query_generator:
+            print("La opcion no es valida, introduce una accion correcta")
+            continue
+        else:
+            query_generator(conn)
 
-
-    #if query_generator:
-    #    query_generator(conn)
-        # query_generated = query_generator()
-        # result = conn.execute(query_generated)
-        # breakpoint()
-        # conn.close()
-    #else:
-    #    print("La opcion no es valida, wey")
+    conn.close()
