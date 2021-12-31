@@ -11,7 +11,7 @@ CREATE TABLE CLIENTE (
     apellido_paterno VARCHAR(50) NOT NULL,
     apellido_materno VARCHAR(50) NOT NULL,
     rfc VARCHAR(13) NOT NULL,
-    ciudad VARCHAR(100) NOT NULL,
+    sucursal VARCHAR(100) NOT NULL,
     PRIMARY KEY(id));
 
 -- Create table for direction
