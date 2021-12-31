@@ -4,9 +4,11 @@ import sqlalchemy
 from dotenv import dotenv_values
 import sys
 import actions as act
+import unidecode
 
 
 config = dotenv_values(".env")# take environment variables from .env.
+
 
 def print_menu():
     """
@@ -20,10 +22,11 @@ def print_menu():
     print("[1] - Buscar usuario por RFC, nombre o domicilio")
     print("[2] - Crear usuario")
     print("[3] - Actualizar usuario")
-    print("[4] - Crear dirección")
-    print("[5] - Actualizar dirección")
-    print("[6] - Crear tabla")
-    print("[7] - Salir")
+    print("[4] - Listar direcciones")
+    print("[5] - Crear dirección")
+    print("[6] - Actualizar dirección")
+    print("[7] - Crear tabla")
+    print("[X] - Salir")
 
 
 def create_new_table(**kwargs):
@@ -45,6 +48,7 @@ OPTIONS = {
     "0": act.list_users,
     "1": act.search_user,
     "2": act.create_user,
+    "4": act.list_address,
 }
 
 def create_connection():
@@ -65,14 +69,14 @@ def select_database_location():
     Function to select the city in which you are going to
     perform the operations.
     """
-    locations = config.get("LOCATIONS")
+    locations = config.get("LOCATIONS").split(",")
     print("Sucursales disponibles: ")
     for location in locations:
         print("-", location)
     choice = input("Selecciona la ubicacion de tu sucursal: ")
     if choice.lower() not in locations:
         pass
-    return choice
+    return unidecode.unidecode(choice.lower())
 
 def list_databases(conn):
     """
@@ -119,7 +123,7 @@ if __name__ == "__main__":
         try:
             user_choice = input("\nElige que quieres realizar: ")
             query_generator = OPTIONS.get(user_choice) #["1"] # OPTIONS.get("1")
-            if user_choice == '7': #Exit
+            if user_choice == 'X': #Exit
                 finished = True
             elif not query_generator:
                 print("La opcion no es valida, introduce una accion correcta")

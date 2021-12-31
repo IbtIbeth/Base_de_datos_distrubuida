@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
 
+
 def list_users(conn):
     query = "SELECT * FROM CLIENTE;"
     res = conn.execute(query)
@@ -8,7 +9,6 @@ def list_users(conn):
     for user_data in res:
         print(*user_data)
     conn.close()
-
 
 
 def search_user(conn):
@@ -49,14 +49,25 @@ def search_user(conn):
 
 
 
-def create_user():
+def create_user(conn):
     """
     Function to create a user in the database
     """
-    nombre, apellido_paterno, apellido_materno, rfc = input("Introduce el nombre, apellido paterno, apellido materno y rfc separados por espacios: ").split()
-    query = 'INSERT INTO CLIENTE (nombre, apellido_paterno, apellido_materno, rfc) VALUES("%s", "%s", "%s", "%s")' %(nombre, apellido_paterno, apellido_materno, rfc)
+    from main import select_database_location
+    print("* Complete los siguientes campos:")
+    nombre = input("Nombre: ")
+    apellido_paterno = input("Apellido paterno: ")
+    apellido_materno = input("Apellido materno: ")
+    rfc = input("RFC: ")
+    sucursal = select_database_location()
+    while not sucursal:
+        print("Error. Escoge una sucursal válida.")
+        sucursal = select_database_location()
+    
+    query = 'INSERT INTO CLIENTE (nombre, apellido_paterno, apellido_materno, rfc, sucursal) VALUES("%s", "%s", "%s", "%s", "%s")' %(nombre, apellido_paterno, apellido_materno, rfc, sucursal)
     query += ";"
-    return query
+    conn.execute(query)
+    
 
 def update_user():
     nombre, apellido_paterno, apellido_materno, rfc = input("Introduce el nombre, apellido paterno, apellido materno separado por espacios: ").split()
@@ -81,13 +92,37 @@ def update_user():
     query += " WHERE id_cliente = '" + str(id_cliente) +"';"
     return query
 
+
+def list_address(conn):
+    query = "SELECT * FROM DIRECCION;"
+    res = conn.execute(query)
+    # Show addresses
+    for address_data in res:
+        print(*address_data)
+    conn.close()
+
 def create_direccion(calle, numero, colonia, estado, cp ):
     """
     Function to create a user in the database
     """
-    calle, numero, colonia, estado, cp = input("Introduce el calle, numero, colonia, estado y código postal separados por espacios: ").split()
+    '''calle, numero, colonia, estado, cp = input("Introduce el calle, numero, colonia, estado y código postal separados por espacios: ").split()
     query = "INSERT INTO direccion (calle, numero, colonia, estado, cp) VALUES(%s, %s, %s, %s, %s)" %(calle, numero, colonia, estado, cp)
-    query += ";"
+    query += ";"'''
+    print("* Complete los siguientes campos")
+    print("[1] Calle")
+    print("[2] RFC")
+    print("[3] Dirección")
+    option = input()
+    while option not in "123":
+        print("Opcion no válida. Introduce un valor válido. ")
+        option = input()
+
+    search_parameter = input("Introduce el texto de búsqueda: ")
+
+    if option == "1":
+        condition = f'nombre="{search_parameter}" OR apellido_paterno="{search_parameter}" OR apellido_materno="{search_parameter}"'
+    elif option == "2":
+        condition = f'rfc="{search_parameter}"'
     return query
 
 def update_direccion(id_direccion, id_cliente):
