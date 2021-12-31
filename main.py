@@ -5,6 +5,7 @@ from dotenv import dotenv_values
 import sys
 import actions as act
 
+
 config = dotenv_values(".env")# take environment variables from .env.
 
 def print_menu():
@@ -115,14 +116,20 @@ if __name__ == "__main__":
     finished = False
 
     while not finished:
-        user_choice = input("\nElige que quieres realizar: ")
-        query_generator = OPTIONS.get(user_choice) #["1"] # OPTIONS.get("1")
-        if user_choice == '7': #Exit
-            finished = True
-        elif not query_generator:
-            print("La opcion no es valida, introduce una accion correcta")
-            continue
-        else:
-            query_generator(conn)
+        try:
+            user_choice = input("\nElige que quieres realizar: ")
+            query_generator = OPTIONS.get(user_choice) #["1"] # OPTIONS.get("1")
+            if user_choice == '7': #Exit
+                finished = True
+            elif not query_generator:
+                print("La opcion no es valida, introduce una accion correcta")
+                continue
+            else:
+                query_generator(conn)
+        except KeyboardInterrupt:
+            print()
+            sys.exit()
+
+
 
     conn.close()
