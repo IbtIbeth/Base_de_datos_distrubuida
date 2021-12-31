@@ -53,7 +53,6 @@ def create_connection():
     password = config.get("PASSWORD")
     host = config.get("HOST")
     port = config.get("PORT")
-    #database = "patzcuaro"
     engine = create_engine(f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}')
 
 
@@ -72,7 +71,7 @@ def select_database_location():
     choice = input("Selecciona la ubicacion de tu sucursal: ")
     if choice.lower() not in locations:
         pass
-    return choice 
+    return choice
 
 def list_databases(conn):
     """
@@ -112,14 +111,15 @@ if __name__ == "__main__":
 
     conn = create_connection()
 
-
     print_menu()
     finished = False
-    
+
     while not finished:
         user_choice = input("\nElige que quieres realizar: ")
         query_generator = OPTIONS.get(user_choice) #["1"] # OPTIONS.get("1")
-        if not query_generator:
+        if user_choice == '7': #Exit
+            finished = True
+        elif not query_generator:
             print("La opcion no es valida, introduce una accion correcta")
             continue
         else:

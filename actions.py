@@ -96,4 +96,3 @@ def update_direccion(id_direccion, id_cliente):
     query += "{}='{}'".format(key, value)
     query += ";"
     return query
-
