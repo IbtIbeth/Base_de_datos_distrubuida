@@ -67,11 +67,11 @@ def create_user(conn):
     while not sucursal:
         print("Error. Escoge una sucursal válida.")
         sucursal = select_database_location()
-    
+
     query = 'INSERT INTO CLIENTE (nombre, apellido_paterno, apellido_materno, rfc, sucursal) VALUES("%s", "%s", "%s", "%s", "%s")' %(nombre, apellido_paterno, apellido_materno, rfc, sucursal)
     query += ";"
     conn.execute(query)
-    
+
 
 def update_user():
     nombre, apellido_paterno, apellido_materno, rfc = input("Introduce el nombre, apellido paterno, apellido materno separado por espacios: ").split()
@@ -105,29 +105,29 @@ def list_address(conn):
         print(*address_data)
 
 
-def create_direccion(calle, numero, colonia, estado, cp ):
+def create_direccion(conn):
+    from main import select_database_location
+    print("* Complete los siguientes campos:")
+    calle = input("Calle: ")
+    numero = input("Número: ")
+    colonia=input("Colonia: ")
+    ciudad = input("Ciudad: ")
+    estado = input("Estado: ")
+    cp = input("Código postal: ")
+    sucursal = select_database_location()
+    while not sucursal:
+        print("Error. Escoge una sucursal válida.")
+        sucursal = select_database_location()
+
+    query = 'INSERT INTO DIRECCION (calle, numero, colonia, ciudad, estado, cp, sucursal) VALUES("%s", "%s", "%s", "%s", "%s", %s, "%s")' %(calle, numero, colonia, ciudad, estado, cp, sucursal)
+    query += ";"
+    conn.execute(query)
+
     """
     Function to create a user in the database
     """
     '''calle, numero, colonia, estado, cp = input("Introduce el calle, numero, colonia, estado y código postal separados por espacios: ").split()
-    query = "INSERT INTO direccion (calle, numero, colonia, estado, cp) VALUES(%s, %s, %s, %s, %s)" %(calle, numero, colonia, estado, cp)
-    query += ";"'''
-    print("* Complete los siguientes campos")
-    print("[1] Calle")
-    print("[2] RFC")
-    print("[3] Dirección")
-    option = input()
-    while option not in "123":
-        print("Opcion no válida. Introduce un valor válido. ")
-        option = input()
 
-    search_parameter = input("Introduce el texto de búsqueda: ")
-
-    if option == "1":
-        condition = f'nombre="{search_parameter}" OR apellido_paterno="{search_parameter}" OR apellido_materno="{search_parameter}"'
-    elif option == "2":
-        condition = f'rfc="{search_parameter}"'
-    return query
 
 def update_direccion(id_direccion, id_cliente):
     query = "UPDATE direccion SET id_direccion = %s, id_cliente = %s " %(id_direccion, id_cliente)
@@ -135,3 +135,4 @@ def update_direccion(id_direccion, id_cliente):
     query += "{}='{}'".format(key, value)
     query += ";"
     return query
+'''

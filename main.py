@@ -49,6 +49,7 @@ OPTIONS = {
     "1": act.search_user,
     "2": act.create_user,
     "4": act.list_address,
+    "5": act.create_direccion,
 }
 
 def create_connection():
