@@ -212,6 +212,19 @@ def validate_connection():
 
     print("La conexion a la base de datos ha sido exitosa")
 
+def select_database_location():
+    """
+    Function to select the city in which you are going to
+    perform the operations.
+    """
+    locations = config.get("LOCATIONS")
+    print("Sucursales disponibles: ")
+    for location in locations:
+        print("-", location)
+    choice = input("Selecciona la ubicacion de tu sucursal: ")
+    if choice.lower() not in locations:
+        pass
+    return choice 
 
 
 if __name__ == "__main__":
