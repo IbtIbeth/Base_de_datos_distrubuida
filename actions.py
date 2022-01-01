@@ -81,7 +81,7 @@ def update_user(conn):
 
     # Update user
     conn.execute(text(query))
-    print(f"Se actualizó correctamente el usuario con ID {user_id}")
+    print(f"\nSe actualizó correctamente el usuario con ID {user_id}")
 
 
 
@@ -110,14 +110,18 @@ def create_direccion(conn):
     query = 'INSERT INTO DIRECCION (calle, numero, colonia, ciudad, estado, cp, sucursal) VALUES("%s", "%s", "%s", "%s", "%s", %s, "%s")' %(calle, numero, colonia, ciudad, estado, cp, sucursal)
     query += ";"
     conn.execute(query)
+    print(f"\nSe creo correctamente la dirección")
 
 
-def update_direccion(id_direccion, id_cliente):
-    query = "UPDATE direccion SET id_direccion = %s, id_cliente = %s " %(id_direccion, id_cliente)
-    query += " WHERE "
-    query += "{}='{}'".format(key, value)
-    query += ";"
-    return query
+def update_direccion(conn):
+
+    address_id = input("Introduce el ID de la dirección que quieres actualizar: ")
+    updatable_fields = ["calle", "numero", "colonia", "ciudad", "estado", "cp", "sucursal"]
+    query = update_values_from_row(address_id, "DIRECCION", updatable_fields)
+
+    # Update address
+    conn.execute(text(query))
+    print(f"\nSe actualizó correctamente la dirección con ID {address_id}")
 
 
 def update_values_from_row(table_id, table, updatable_fields: list):

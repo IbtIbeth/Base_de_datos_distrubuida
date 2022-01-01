@@ -125,7 +125,7 @@ def generate_new_table(conn):
     server_queries = []
     for conn_data in connections_data:
         server_queries.append(generate_server_sql(**conn_data))
-    
+
     # Execute queries to create server connections
     for query in server_queries:
         conn.execute(query)
@@ -138,10 +138,10 @@ def generate_new_table(conn):
         column_name = input("Ingresa el nombre de la columna: ")
         column_type = input("Ingresa el tipo de dato de la columna: ")
         columns[column_name] = column_type
-    
+
     # Generate query to create the table
     slave_query = create_new_table_query(name, columns, [])
-    
+
     # Modify the query to create the table in the master database using spider
     master_query = slave_query[:-1]
     spider_engine = """
@@ -150,7 +150,7 @@ def generate_new_table(conn):
     PARTITION BY LIST COLUMNS (sucursal) (
     """ % name
     master_query += spider_engine
-    
+
     # Generate partitions and add them to the master query
     for i, data in enumerate(connections_data):
         partition = """PARTITION p%s VALUES IN ("%s") COMMENT = 'srv "Server%s"',""" % (i, data.get("label").lower(), data.get("label"))
@@ -228,6 +228,7 @@ OPTIONS = {
     "3": act.update_user,
     "4": act.list_address,
     "5": act.create_direccion,
+    "6": act.update_direccion,
     "7": generate_new_table
 }
 
