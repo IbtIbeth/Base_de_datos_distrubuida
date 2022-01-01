@@ -1,18 +1,20 @@
 {
     "slave_connections": [
         {
-            "host": "YOUR_HOST_1",
+            "label": "Patzcuaro",
+            "host": "YOUR_HOST_DIRECTION",
             "port": 3306,
-            "user": "YOUR_USER",
-            "password": "YOUR_PASSWORD",
-            "database": "YOUR_DATABASE"
+            "user": "USER",
+            "password": "PASSWORD",
+            "database": "sucursal"
         },
         {
-            "host": "YOUR_HOST_2",
+            "label": "Morelia",
+            "host": "YOUR_HOST_DIRECTION",
             "port": 3306,
-            "user": "YOUR_USER",
-            "password": "YOUR_PASSWORD",
-            "database": "YOUR_DATABASE"
+            "user": "USER",
+            "password": "PASSWORD",
+            "database": "sucursal"
         }
     ]
 }

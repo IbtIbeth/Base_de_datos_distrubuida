@@ -4,12 +4,13 @@ from sqlalchemy import text
 import sqlalchemy
 from dotenv import dotenv_values
 import sys
+from sqlalchemy.engine.base import Connection
 import actions as act
 import unidecode
 import json
 
 
-config = dotenv_values(".env")# take environment variables from .env.
+config = dotenv_values(".env") # take environment variables from .env.
 
 
 def print_menu():
@@ -31,47 +32,10 @@ def print_menu():
     print("[X] - Salir")
 
 
-def create_new_table(**kwargs):
-    i = 0
-    query = ""
-    for value in kwargs.items():
-        if i == 0: #asumo el primer valor del input es el nombre de la tabla
-            query += "CREATE TABLE " + '{0}'
-            query += "(id_'{0}' INT NOT NULL AUTO_INCREMENT, "
-        else:
-            query += '{value}'
-        i += 1
-    query += ";"
-    return query
-
-def generate_new_table(conn):
-    
-    # Get all the slaves db connections
-
-    # Create the slaves db connections
-
-    # 
-
-    create_new_table_query()
-
-
-
-def create_new_table_query(name, columns: Dict[str, str], relations):
-    pass
-
-
-OPTIONS = {
-    "0": act.list_users,
-    "1": act.search_user,
-    "2": act.create_user,
-    "3": act.update_user,
-    "4": act.list_address,
-    "5": act.create_direccion,
-    "7": generate_new_table
-}
-
 def load_main_connection():
-    #Validate the location is valid...+
+    """
+    Function to load the main connection.
+    """
     database = config.get("DATABASE")
     user = config.get("USER_DB")
     password = config.get("PASSWORD")
@@ -85,6 +49,131 @@ def load_main_connection():
 def create_connection(user, password, host, port, database):
     engine = create_engine(f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}')
     return engine.connect()
+
+
+def create_new_table(**kwargs):
+    i = 0
+    query = ""
+    for value in kwargs.items():
+        if i == 0: #asumo el primer valor del input es el nombre de la tabla
+            query += "CREATE TABLE " + '{0}'
+            query += "(id_'{0}' INT NOT NULL AUTO_INCREMENT, "
+        else:
+            query += '{value}'
+        i += 1
+    query += ";"
+    return query
+
+
+def get_slaves_connections():
+    """
+    Function to get and validate the connection of all the slaves databases.
+    """
+    # Load the slave connection info from the file.
+    slave_connections = json.load(open("connections.json")).get("slave_connections")
+
+    # TODO Use threads
+    connections = []
+    for connection_data in slave_connections:
+        try:
+            host = connection_data['host']
+            clean_connection_data = connection_data.copy()
+            # Remove label
+            del clean_connection_data['label']
+            conn = create_connection(**clean_connection_data)
+            connections.append(conn)
+            print(f"[*] Conexión exitosa con el host {host}")
+        except:
+            print(f"[*] ERROR: Ocurrio un problema al establecer conexión con el host {host}")
+
+    return connections, slave_connections
+
+
+def create_new_table_query(name, columns: Dict[str, str], relations):
+    """
+    Function to create the query for create a new table.
+    """
+    query = "CREATE TABLE " + name + "("
+    for column, type in columns.items():
+        query += column + " " + type + ", "
+    # Add primary key
+    query += "sucursal VARCHAR(50),"
+    query += "id INT NOT NULL AUTO_INCREMENT, "
+    query += "PRIMARY KEY (id));"
+    return query
+
+def generate_server_sql(label, host, database, port, user, password):
+    """
+    Generate a SQL Query to create the spider server.
+    """
+    query = """
+            CREATE OR REPLACE SERVER Server%s FOREIGN DATA WRAPPER mysql
+            OPTIONS(HOST '%s', DATABASE '%s', PORT %s,
+            USER '%s', PASSWORD '%s');
+            """ % (label, host, database, port, user, password)
+    return query
+
+
+def generate_new_table(conn):
+    """
+    Function to generate a new table based in the input of the user.
+    """
+    # Get all the slaves db connections
+    connections, connections_data = get_slaves_connections()
+
+    # Create SQL for Server connections
+    server_queries = []
+    for conn_data in connections_data:
+        server_queries.append(generate_server_sql(**conn_data))
+    
+    # Execute queries to create server connections
+    for query in server_queries:
+        conn.execute(query)
+
+    # Request the information for the table
+    name = input("Ingresa el nombre de la tabla: ")
+    total_columns = int(input("Ingresa el total de columnas: "))
+    columns = {}
+    for i in range(total_columns):
+        column_name = input("Ingresa el nombre de la columna: ")
+        column_type = input("Ingresa el tipo de dato de la columna: ")
+        columns[column_name] = column_type
+    
+    # Generate query to create the table
+    slave_query = create_new_table_query(name, columns, [])
+    
+    # Modify the query to create the table in the master database using spider
+    master_query = slave_query[:-1]
+    spider_engine = """
+    ENGINE=Spider
+    COMMENT 'wrapper "mysql", table "%s"'
+    PARTITION BY LIST COLUMNS (sucursal) (
+    """ % name
+    master_query += spider_engine
+    
+    # Generate partitions and add them to the master query
+    for i, data in enumerate(connections_data):
+        partition = """PARTITION p%s VALUES IN ("%s") COMMENT = 'srv "Server%s"',""" % (i, data.get("label").lower(), data.get("label"))
+        master_query += partition.strip().strip()
+    master_query = master_query[:-1]
+    master_query += ");"
+
+    # Apply query in all databases.
+    for connection in connections:
+        try:
+            connection.execute(slave_query)
+            print(f"[*] Tabla {name} creada exitosamente en la base de datos {connection.engine.url.database}")
+        except:
+            print(f"[*] ERROR: Ocurrio un problema al crear la tabla {name} en la base de datos {connection.engine.url.database}")
+
+    master_query = master_query.replace("PRIMARY KEY (id)", "PRIMARY KEY (id, sucursal)")
+    # Apply query for master
+    conn.execute(master_query)
+
+    # Close connections
+    list(map(Connection.close, connections))
+    print("Conexiones cerradas con las bases de datos.")
+
 
 def select_database_location():
     """
@@ -132,26 +221,15 @@ def validate_connection():
 
     print("La conexion a la base de datos ha sido exitosa")
 
-def get_slaves_connections():
-    """
-    Function to get and validate the connection of all the slaves databases.
-    """
-    # Load the slave connection info from the file.
-    slave_connections = json.load(open("connections.json")).get("slave_connections")
-
-    # TODO Use threads
-    connections = []
-    for connection_data in slave_connections:
-        try:
-            host = connection_data['host']
-            conn = create_connection(**connection_data)
-            connections.append(conn)
-            print(f"[*] Conexión exitosa con el host {host}")
-        except:
-            print(f"[*] ERROR: Ocurrio un problema al establecer conexión con el host {host}")
-    # breakpoint()
-    # Validate each connection
-    return connections
+OPTIONS = {
+    "0": act.list_users,
+    "1": act.search_user,
+    "2": act.create_user,
+    "3": act.update_user,
+    "4": act.list_address,
+    "5": act.create_direccion,
+    "7": generate_new_table
+}
 
 
 if __name__ == "__main__":
