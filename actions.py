@@ -1,3 +1,4 @@
+from os import sep
 from typing import Dict
 from sqlalchemy import text
 
@@ -7,8 +8,11 @@ def list_users(conn):
     query = "SELECT * FROM CLIENTE;"
     res = conn.execute(query)
     # Show the users
+    print("| ID  | Nombre      | Apellido paterno | Apellido materno    | RFC      | Sucursal   |")
+    print("|-----|-------------|------------------|---------------------|----------|------------")
     for user_data in res:
-        print(*user_data)
+        print("|", end="")
+        print(*user_data, sep=" | ")
 
 
 
@@ -43,12 +47,10 @@ def search_user(conn):
 
     # TODO Find a better way to select the table
     query = "SELECT * FROM CLIENTE WHERE " + condition + ";"
-    breakpoint()
     res = list(conn.execute(text(query)))
-    breakpoint()
     if res:
         for user_data in res:
-            print(*user_data)
+            print(*user_data, sep=" | ")
     else:
         print("No se encontró el cliente")
 
