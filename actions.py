@@ -73,28 +73,15 @@ def create_user(conn):
     conn.execute(query)
 
 
-def update_user():
-    nombre, apellido_paterno, apellido_materno, rfc = input("Introduce el nombre, apellido paterno, apellido materno separado por espacios: ").split()
-    id_cliente = search_user(nombre, apellido_paterno, apellido_materno)
-    print("[1] - Nombre")
-    print("[2] - Apellido paterno")
-    print("[3] - Apellido materno")
-    print("[4] - RFC")
-    options = {'1' : 'nombre', '2': 'apellido_paterno', '3': 'apellido_materno', '4': 'rfc'}
-    changes = input("Introduce los números de los campos en los que quieras realizar cambios, separados por espacios: ").split()
-    query = "UPDATE CLIENTE "
-    i = 0
-    for j in changes:
-        new_val = input("Introduce el nuevo valor del ") + str(options[j])
-        while(i == 0):
-            query += "SET "
-        else:
-            query += " AND "
-        query += str(options[j]) + " = '" + str(new_val[j]) + "'"
-        i += 1
+def update_user(conn):
+    user_id = input("Introduce el ID del usuario que quieres actualizar: ")
+    updatable_fields = ["nombre", "apellido_paterno", "apellido_materno", "rfc", "sucursal"]
+    query = update_values_from_row(user_id, "CLIENTE", updatable_fields)
 
-    query += " WHERE id_cliente = '" + str(id_cliente) +"';"
-    return query
+    # Update user
+    conn.execute(text(query))
+    print(f"Se actualizó correctamente el usuario con ID {user_id}")
+
 
 
 def list_address(conn):
@@ -123,11 +110,6 @@ def create_direccion(conn):
     query += ";"
     conn.execute(query)
 
-    """
-    Function to create a user in the database
-    """
-    '''calle, numero, colonia, estado, cp = input("Introduce el calle, numero, colonia, estado y código postal separados por espacios: ").split()
-
 
 def update_direccion(id_direccion, id_cliente):
     query = "UPDATE direccion SET id_direccion = %s, id_cliente = %s " %(id_direccion, id_cliente)
@@ -135,4 +117,20 @@ def update_direccion(id_direccion, id_cliente):
     query += "{}='{}'".format(key, value)
     query += ";"
     return query
-'''
+
+
+def update_values_from_row(table_id, table, updatable_fields: list):
+    query = f"UPDATE {table}"
+    print("Introduce el valor por el que lo quieres actualizar, si quieres mantenerlo igual solo omitelo presionando la tecla ENTER")
+    new_fields = {}
+    for field in updatable_fields:
+        new_value = input(f'Introduce el nuevo valor {field.replace("_", " ")}: ')
+        if new_value:
+            new_fields[field] = new_value
+    updates = " SET"
+    for column, value in new_fields.items():
+        updates += f" {column}='{value}',"
+
+    condition = f" WHERE id={table_id}"
+    query = query + updates[:-1] + condition + ";"
+    return query

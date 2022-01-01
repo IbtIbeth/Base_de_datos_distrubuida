@@ -48,6 +48,7 @@ OPTIONS = {
     "0": act.list_users,
     "1": act.search_user,
     "2": act.create_user,
+    "3": act.update_user,
     "4": act.list_address,
     "5": act.create_direccion,
 }
