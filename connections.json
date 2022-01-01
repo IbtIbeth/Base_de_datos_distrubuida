@@ -1,0 +1,18 @@
+{
+    "slave_connections": [
+        {
+            "host": "YOUR_HOST_1",
+            "port": 3306,
+            "user": "YOUR_USER",
+            "password": "YOUR_PASSWORD",
+            "database": "YOUR_DATABASE"
+        },
+        {
+            "host": "YOUR_HOST_2",
+            "port": 3306,
+            "user": "YOUR_USER",
+            "password": "YOUR_PASSWORD",
+            "database": "YOUR_DATABASE"
+        }
+    ]
+}
